@@ -8,6 +8,7 @@ import (
 
 	"github.com/obiMadu/goJWTAuth/internals/models"
 
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -16,13 +17,15 @@ var counts int
 
 func NewDB() (*gorm.DB, error) {
 	// new db
-	db := connectToDB()
+	db := connectToPostgres()
+	log.Println("Connected to DB")
 
 	// migrate models
 	err := migrate(db)
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Successfully Migrated Models.")
 
 	return db, nil
 }
@@ -47,11 +50,20 @@ func migrate(db *gorm.DB) error {
 	return nil
 }
 
-func connectToDB() *gorm.DB {
-	dsn := os.Getenv("DSN")
+func RawDB(db *gorm.DB) *sql.DB {
+	rawDB, err := db.DB()
+	if err != nil {
+		log.Panicf("Unable to get raw sql.DB %s\n", err.Error())
+	}
+
+	return rawDB
+}
+
+func connectToPostgres() *gorm.DB {
+	dsn := os.Getenv("POSTGRES_DSN")
 
 	for {
-		connection, err := openDB(dsn)
+		connection, err := openPostgres(dsn)
 		if err != nil {
 			log.Println("Postgres not yet ready ...")
 			counts++
@@ -70,7 +82,30 @@ func connectToDB() *gorm.DB {
 	}
 }
 
-func openDB(dsn string) (*gorm.DB, error) {
+func connectToMysql() *gorm.DB {
+	dsn := os.Getenv("MYSQL_DSN")
+
+	for {
+		connection, err := openMysql(dsn)
+		if err != nil {
+			log.Println("MySQL not yet ready ...")
+			counts++
+		} else {
+			log.Println("Connected to MySQL!")
+			return connection
+		}
+
+		if counts > 10 {
+			log.Fatal(err)
+		}
+
+		log.Println("Backing off for three seconds....")
+		time.Sleep(3 * time.Second)
+		continue
+	}
+}
+
+func openPostgres(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -91,11 +126,23 @@ func openDB(dsn string) (*gorm.DB, error) {
 	return db, nil
 }
 
-func RawDB(db *gorm.DB) *sql.DB {
-	rawDB, err := db.DB()
+func openMysql(dsn string) (*gorm.DB, error) {
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Panicf("Unable to get raw sql.DB %s\n", err.Error())
+		return nil, err
 	}
 
-	return rawDB
+	// return *sql.DB from db(*gorm.DB) to enable Ping()
+	gormDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	// ping database
+	err = gormDB.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
