@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/obiMadu/goJWTAuth/internals/models"
 
 	"gorm.io/driver/mysql"
@@ -26,6 +27,15 @@ func NewDB() (*gorm.DB, error) {
 		return nil, err
 	}
 	log.Println("Successfully Migrated Models.")
+
+	if gin.Mode() == gin.ReleaseMode {
+		db.Logger.LogMode(0)
+	}
+
+	rawDB := RawDB(db)
+
+	rawDB.SetMaxIdleConns(20)
+	rawDB.SetMaxOpenConns(100)
 
 	return db, nil
 }
