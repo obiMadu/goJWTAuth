@@ -21,13 +21,6 @@ func NewDB() (*gorm.DB, error) {
 	db := connectToPostgres()
 	log.Println("Connected to DB")
 
-	// migrate models
-	err := migrate(db)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("Successfully Migrated Models.")
-
 	if gin.Mode() == gin.ReleaseMode {
 		db.Logger.LogMode(0)
 	}
@@ -38,6 +31,21 @@ func NewDB() (*gorm.DB, error) {
 	rawDB.SetMaxOpenConns(100)
 
 	return db, nil
+}
+
+func ConfigDB() {
+	// new db
+	db, err := NewDB()
+	if err != nil {
+		log.Fatalf("Unable to connect to DB %s\n", err.Error())
+	}
+
+	// migrate models
+	err = migrate(db)
+	if err != nil {
+		log.Fatalf("Unable to migrate models %s\n", err.Error())
+	}
+	log.Println("Successfully Migrated Models.")
 }
 
 func NewRawDB() *sql.DB {
