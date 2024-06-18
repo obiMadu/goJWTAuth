@@ -11,6 +11,7 @@ func routes() *gin.Engine {
 	mux.Use(cors.Default())
 
 	// TODO: create routes
+	mux.POST("/login", login)
 
 	return mux
 }
