@@ -19,7 +19,7 @@ func login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, jsonResponse{
 			Status:  "error",
-			Message: "Invalid credentials.",
+			Message: "Invalid request.",
 		})
 		return
 	}
