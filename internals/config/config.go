@@ -6,7 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/obiMadu/goJWTAuth/internals/db"
-	"github.com/obiMadu/goJWTAuth/internals/jwt"
+	"github.com/obiMadu/goJWTAuth/internals/jwtmod"
 )
 
 func Config() {
@@ -20,5 +20,5 @@ func Config() {
 	db.InitDB()
 
 	// init jwt
-	jwt.JwtKey = []byte(os.Getenv("JWTKEY"))
+	jwtmod.JwtKey = []byte(os.Getenv("JWTKEY"))
 }
