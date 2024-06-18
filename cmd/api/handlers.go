@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/obiMadu/goJWTAuth/internals/db"
+	"github.com/obiMadu/goJWTAuth/internals/jwt"
 	"github.com/obiMadu/goJWTAuth/internals/models"
 )
 
@@ -43,11 +44,19 @@ func login(c *gin.Context) {
 		return
 	}
 
+	token, err := jwt.GenerateJWT(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, jsonResponse{
+			Status:  "error",
+			Message: "Failed to generate token.",
+		})
+	}
+
 	payload := jsonResponse{
 		Status:  "success",
 		Message: "Logged In successfully.",
 		Data: gin.H{
-			"token": "jwt",
+			"token": token,
 		},
 	}
 
