@@ -15,52 +15,33 @@ import (
 )
 
 var counts int
+var DB *gorm.DB
 
-func NewDB() (*gorm.DB, error) {
+func InitDB() {
 	// new db
 	db := connectToPostgres()
-	log.Println("Connected to DB")
 
 	if gin.Mode() == gin.ReleaseMode {
 		db.Logger.LogMode(0)
 	}
 
-	rawDB := RawDB(db)
+	DB = db
+
+	rawDB := RawDB()
 
 	rawDB.SetMaxIdleConns(20)
 	rawDB.SetMaxOpenConns(100)
 
-	return db, nil
-}
-
-func ConfigDB() {
-	// new db
-	db, err := NewDB()
-	if err != nil {
-		log.Fatalf("Unable to connect to DB %s\n", err.Error())
-	}
-
 	// migrate models
-	err = migrate(db)
+	err := migrate()
 	if err != nil {
-		log.Fatalf("Unable to migrate models %s\n", err.Error())
+		log.Panicf("Unable to migrate models %s\n", err.Error())
 	}
 	log.Println("Successfully Migrated Models.")
 }
 
-func NewRawDB() *sql.DB {
-	db, err := NewDB()
-	if err != nil {
-		log.Panicf("Unable to create & configure DB %s\n", err.Error())
-	}
-
-	rawDB := RawDB(db)
-
-	return rawDB
-}
-
-func migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&models.User{})
+func migrate() error {
+	err := DB.AutoMigrate(&models.User{})
 	if err != nil {
 		return err
 	}
@@ -68,8 +49,8 @@ func migrate(db *gorm.DB) error {
 	return nil
 }
 
-func RawDB(db *gorm.DB) *sql.DB {
-	rawDB, err := db.DB()
+func RawDB() *sql.DB {
+	rawDB, err := DB.DB()
 	if err != nil {
 		log.Panicf("Unable to get raw sql.DB %s\n", err.Error())
 	}
@@ -86,7 +67,7 @@ func connectToPostgres() *gorm.DB {
 			log.Println("Postgres not yet ready ...")
 			counts++
 		} else {
-			log.Println("Connected to Postgres!")
+			log.Println("Connected to Postgres")
 			return connection
 		}
 
@@ -109,7 +90,7 @@ func connectToMysql() *gorm.DB {
 			log.Println("MySQL not yet ready ...")
 			counts++
 		} else {
-			log.Println("Connected to MySQL!")
+			log.Println("Connected to MySQL")
 			return connection
 		}
 
