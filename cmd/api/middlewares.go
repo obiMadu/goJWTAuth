@@ -8,7 +8,7 @@ import (
 	"github.com/obiMadu/goJWTAuth/internals/jwtmod"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
