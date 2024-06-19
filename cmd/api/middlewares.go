@@ -20,15 +20,15 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims := &jwtmod.JwtClaim{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		claims := jwtmod.JwtClaim{}
+		token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtmod.JwtKey, nil
 		})
 
 		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, jsonResponse{
 				Status:  "error",
-				Message: "Authorization header missing.",
+				Message: "Invalid token.",
 			})
 			c.Abort()
 			return
