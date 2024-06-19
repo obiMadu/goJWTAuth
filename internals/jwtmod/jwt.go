@@ -10,8 +10,7 @@ import (
 var JwtKey []byte
 
 type JwtClaim struct {
-	UserID int    `json:"userId" binding:"required"`
-	Email  string `json:"email" binding:"required"`
+	UserID int `json:"userId" binding:"required"`
 	jwt.StandardClaims
 }
 
@@ -21,7 +20,6 @@ func GenerateJWT(user *models.User) (string, error) {
 
 	claims := JwtClaim{
 		UserID: user.ID,
-		Email:  user.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
