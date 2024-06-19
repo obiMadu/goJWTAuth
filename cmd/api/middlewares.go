@@ -25,7 +25,16 @@ func authMiddleware() gin.HandlerFunc {
 			return jwtmod.JwtKey, nil
 		})
 
-		if err != nil || !token.Valid {
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, jsonResponse{
+				Status:  "error",
+				Message: "Error validating token.",
+			})
+			c.Abort()
+			return
+		}
+
+		if !token.Valid {
 			c.JSON(http.StatusUnauthorized, jsonResponse{
 				Status:  "error",
 				Message: "Invalid token.",
