@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +12,6 @@ import (
 
 // TODO: create handlers
 func login(c *gin.Context) {
-
-	db := db.RawDB()
 
 	requestPayload := jsonRequest{}
 
@@ -26,7 +25,7 @@ func login(c *gin.Context) {
 	}
 
 	// validate the user against the database
-	user, err := models.GetByEmail(db, requestPayload.Email)
+	user, err := models.GetByEmail(db.RawDB(), requestPayload.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, jsonResponse{
 			Status:  "error",
@@ -57,6 +56,53 @@ func login(c *gin.Context) {
 		Message: "Logged In successfully.",
 		Data: gin.H{
 			"token": token,
+		},
+	}
+
+	c.JSON(http.StatusOK, payload)
+}
+
+func getProfile(c *gin.Context) {
+	var claimsJSON jwtmod.JwtClaim
+
+	claims, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, jsonResponse{
+			Status:  "error",
+			Message: "Unable to retrieve claims.",
+		})
+	}
+
+	// Convert the interface{} to JSON bytes
+	jsonBytes, err := json.Marshal(claims)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, jsonResponse{
+			Status:  "error",
+			Message: "Could not marshal claims.",
+		})
+	}
+
+	if err := json.Unmarshal(jsonBytes, &claimsJSON); err != nil {
+		c.JSON(http.StatusInternalServerError, jsonResponse{
+			Status:  "error",
+			Message: "Could not unmarshal claims.",
+		})
+	}
+
+	user, err := models.GetByEmail(db.RawDB(), claimsJSON.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, jsonResponse{
+			Status:  "error",
+			Message: "Couldn't retrieve user.",
+		})
+		return
+	}
+
+	payload := jsonResponse{
+		Status:  "success",
+		Message: "User authenticated successfully.",
+		Data: gin.H{
+			"user": user,
 		},
 	}
 
