@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/obiMadu/goJWTAuth/internals/db"
-	"github.com/obiMadu/goJWTAuth/internals/jwt"
+	"github.com/obiMadu/goJWTAuth/internals/jwtmod"
 	"github.com/obiMadu/goJWTAuth/internals/models"
 )
 
@@ -44,7 +44,7 @@ func login(c *gin.Context) {
 		return
 	}
 
-	token, err := jwt.GenerateJWT(user)
+	token, err := jwtmod.GenerateJWT(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, jsonResponse{
 			Status:  "error",
