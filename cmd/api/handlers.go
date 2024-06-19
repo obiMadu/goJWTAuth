@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -63,7 +62,6 @@ func login(c *gin.Context) {
 }
 
 func getProfile(c *gin.Context) {
-	var claimsJSON jwtmod.JwtClaim
 
 	claims, exists := c.Get("claims")
 	if !exists {
@@ -73,23 +71,7 @@ func getProfile(c *gin.Context) {
 		})
 	}
 
-	// Convert the interface{} to JSON bytes
-	jsonBytes, err := json.Marshal(claims)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, jsonResponse{
-			Status:  "error",
-			Message: "Could not marshal claims.",
-		})
-	}
-
-	if err := json.Unmarshal(jsonBytes, &claimsJSON); err != nil {
-		c.JSON(http.StatusInternalServerError, jsonResponse{
-			Status:  "error",
-			Message: "Could not unmarshal claims.",
-		})
-	}
-
-	user, err := models.GetByEmail(db.RawDB(), claimsJSON.Email)
+	user, err := models.GetOne(db.RawDB(), claims.(jwtmod.JwtClaim).UserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, jsonResponse{
 			Status:  "error",
