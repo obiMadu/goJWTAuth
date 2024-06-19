@@ -13,5 +13,7 @@ func routes() *gin.Engine {
 	// TODO: create routes
 	mux.POST("/login", login)
 
+	mux.GET("/profile", authMiddleware(), getProfile)
+
 	return mux
 }
